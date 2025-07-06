@@ -1,25 +1,19 @@
-
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Star, IndianRupee, MapPin, Phone, Mail, ArrowLeft, Calendar } from "lucide-react";
 import Navigation from "@/components/Navigation";
+import BookingForm from "@/components/BookingForm";
 import { useState } from "react";
 import { useDoctor, useAvailableSlots } from "@/hooks/useDoctors";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 
 const Doctor = () => {
   const { id } = useParams<{ id: string }>();
-  const { user, signInWithGoogle } = useAuth();
-  const { toast } = useToast();
   const [selectedSlot, setSelectedSlot] = useState("");
-  const [isBooking, setIsBooking] = useState(false);
 
-  const { data: doctor, isLoading } = useDoctor(id!);
-  const { data: availableSlots = [] } = useAvailableSlots(id!);
+  const { data: doctor, isLoading, refetch: refetchDoctor } = useDoctor(id!);
+  const { data: availableSlots = [], refetch: refetchSlots } = useAvailableSlots(id!);
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -32,81 +26,10 @@ const Doctor = () => {
     return date.toLocaleDateString('en-IN', { weekday: 'long', month: 'short', day: 'numeric' });
   };
 
-  const handleBookAppointment = async () => {
-    if (!user) {
-      await signInWithGoogle();
-      return;
-    }
-
-    if (!selectedSlot) {
-      toast({
-        title: "Please select a time slot",
-        description: "Choose an available appointment slot to continue.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsBooking(true);
-
-    try {
-      const [slotId, date, time] = selectedSlot.split('|');
-      
-      // Create appointment
-      const { error: appointmentError } = await supabase
-        .from('appointments')
-        .insert({
-          user_id: user.id,
-          doctor_id: id!,
-          slot_id: slotId,
-          appointment_date: date,
-          appointment_time: time,
-          status: 'confirmed'
-        });
-
-      if (appointmentError) throw appointmentError;
-
-      // Mark slot as unavailable
-      const { error: slotError } = await supabase
-        .from('available_slots')
-        .update({ is_available: false })
-        .eq('id', slotId);
-
-      if (slotError) throw slotError;
-
-      // Send confirmation email
-      try {
-        await supabase.functions.invoke('send-appointment-confirmation', {
-          body: {
-            doctorName: doctor?.name,
-            patientEmail: user.email,
-            patientName: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Patient',
-            appointmentDate: formatDate(date),
-            appointmentTime: time,
-            consultationFee: doctor?.consultation_fee
-          }
-        });
-      } catch (emailError) {
-        console.error('Email sending failed:', emailError);
-        // Don't fail the booking if email fails
-      }
-
-      toast({
-        title: "Appointment Booked Successfully!",
-        description: `Your appointment with ${doctor?.name} has been confirmed for ${formatDate(date)} at ${time}. You will receive a confirmation email shortly.`,
-      });
-
-      setSelectedSlot("");
-    } catch (error: any) {
-      console.error('Booking error:', error);
-      toast({
-        title: "Booking Failed",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsBooking(false);
-    }
+  const handleBookingSuccess = () => {
+    setSelectedSlot("");
+    refetchSlots();
+    refetchDoctor();
   };
 
   if (isLoading) {
@@ -259,13 +182,13 @@ const Doctor = () => {
                     </div>
                   ))}
                 </div>
-                <Button 
-                  className="w-full mt-6" 
-                  onClick={handleBookAppointment}
-                  disabled={!selectedSlot || isBooking}
-                >
-                  {isBooking ? "Booking..." : user ? "Book Appointment" : "Sign In to Book"}
-                </Button>
+                <div className="mt-6">
+                  <BookingForm 
+                    doctor={doctor}
+                    selectedSlot={selectedSlot}
+                    onBookingSuccess={handleBookingSuccess}
+                  />
+                </div>
                 <p className="text-xs text-gray-500 mt-2 text-center">
                   You'll receive confirmation via email
                 </p>
