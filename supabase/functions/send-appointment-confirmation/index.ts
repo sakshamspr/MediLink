@@ -1,8 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const sendGridApiKey = "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";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,6 +17,36 @@ interface AppointmentEmailRequest {
   appointmentTime: string;
   consultationFee: number;
 }
+
+const sendEmail = async (to: string, subject: string, html: string) => {
+  const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${sendGridApiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      personalizations: [
+        {
+          to: [{ email: to }],
+          subject: subject,
+        },
+      ],
+      from: {
+        email: "sakshamspra@gmail.com",
+        name: "MediLink",
+      },
+      content: [
+        {
+          type: "text/html",
+          value: html,
+        },
+      ],
+    }),
+  });
+
+  return response;
+};
 
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
@@ -37,7 +66,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending appointment confirmation emails to:", patientEmail, "and admin");
 
-    const adminEmail = "sakshamsapra11@gmail.com"; // Fixed admin email
+    const adminEmail = "sakshamsapra11@gmail.com";
 
     // Email template for patient
     const patientEmailHtml = `
@@ -123,43 +152,43 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Attempting to send patient email to:", patientEmail);
 
     // Send email to patient
-    const patientEmailResponse = await resend.emails.send({
-      from: "MediLink <onboarding@resend.dev>",
-      to: [patientEmail],
-      subject: `Appointment Confirmed with ${doctorName}`,
-      html: patientEmailHtml,
-    });
+    const patientEmailResponse = await sendEmail(
+      patientEmail,
+      `Appointment Confirmed with ${doctorName}`,
+      patientEmailHtml
+    );
 
-    console.log("Patient email response:", patientEmailResponse);
+    console.log("Patient email response status:", patientEmailResponse.status);
 
-    if (patientEmailResponse.error) {
-      console.error("Patient email error:", patientEmailResponse.error);
+    if (!patientEmailResponse.ok) {
+      const errorText = await patientEmailResponse.text();
+      console.error("Patient email error:", errorText);
     } else {
-      console.log("Patient email sent successfully with ID:", patientEmailResponse.data?.id);
+      console.log("Patient email sent successfully");
     }
 
     console.log("Attempting to send admin email to:", adminEmail);
 
     // Send email to admin
-    const adminEmailResponse = await resend.emails.send({
-      from: "MediLink <onboarding@resend.dev>",
-      to: [adminEmail],
-      subject: `New Appointment Booked - ${doctorName}`,
-      html: adminEmailHtml,
-    });
+    const adminEmailResponse = await sendEmail(
+      adminEmail,
+      `New Appointment Booked - ${doctorName}`,
+      adminEmailHtml
+    );
 
-    console.log("Admin email response:", adminEmailResponse);
+    console.log("Admin email response status:", adminEmailResponse.status);
 
-    if (adminEmailResponse.error) {
-      console.error("Admin email error:", adminEmailResponse.error);
+    if (!adminEmailResponse.ok) {
+      const errorText = await adminEmailResponse.text();
+      console.error("Admin email error:", errorText);
     } else {
-      console.log("Admin email sent successfully with ID:", adminEmailResponse.data?.id);
+      console.log("Admin email sent successfully");
     }
 
     return new Response(JSON.stringify({ 
       success: true, 
-      patientEmail: patientEmailResponse,
-      adminEmail: adminEmailResponse,
+      patientEmailStatus: patientEmailResponse.status,
+      adminEmailStatus: adminEmailResponse.status,
       message: "Emails sent successfully"
     }), {
       status: 200,
