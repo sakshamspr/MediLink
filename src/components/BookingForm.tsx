@@ -59,11 +59,15 @@ const BookingForm = ({ doctor, selectedSlot, onBookingSuccess }: BookingFormProp
     try {
       const [slotId, date, time] = selectedSlot.split('|');
       
-      // Create appointment without user authentication
+      // First, get the current user or create a session identifier
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id || crypto.randomUUID(); // Generate a temporary UUID for anonymous users
+      
+      // Create appointment with either authenticated user ID or generated UUID
       const { error: appointmentError } = await supabase
         .from('appointments')
         .insert({
-          user_id: '00000000-0000-0000-0000-000000000000', // Placeholder user ID
+          user_id: userId,
           doctor_id: doctor.id,
           slot_id: slotId,
           appointment_date: date,
@@ -71,7 +75,10 @@ const BookingForm = ({ doctor, selectedSlot, onBookingSuccess }: BookingFormProp
           status: 'confirmed'
         });
 
-      if (appointmentError) throw appointmentError;
+      if (appointmentError) {
+        console.error('Appointment creation error:', appointmentError);
+        throw appointmentError;
+      }
 
       // Mark slot as unavailable
       const { error: slotError } = await supabase
