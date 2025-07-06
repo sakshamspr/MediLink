@@ -59,7 +59,29 @@ const BookingForm = ({ doctor, selectedSlot, onBookingSuccess }: BookingFormProp
     try {
       const [slotId, date, time] = selectedSlot.split('|');
       
-      // First, get the current user or create a session identifier
+      // First check if slot is still available
+      const { data: slotCheck, error: slotCheckError } = await supabase
+        .from('available_slots')
+        .select('is_available')
+        .eq('id', slotId)
+        .single();
+
+      if (slotCheckError) {
+        console.error('Slot check error:', slotCheckError);
+        throw new Error('Failed to verify slot availability');
+      }
+
+      if (!slotCheck.is_available) {
+        toast({
+          title: "Slot No Longer Available",
+          description: "This time slot has been booked by someone else. Please select another slot.",
+          variant: "destructive"
+        });
+        onBookingSuccess(); // Refresh the slots
+        return;
+      }
+      
+      // Get the current user or create a session identifier
       const { data: { user } } = await supabase.auth.getUser();
       const userId = user?.id || crypto.randomUUID(); // Generate a temporary UUID for anonymous users
       
@@ -86,11 +108,14 @@ const BookingForm = ({ doctor, selectedSlot, onBookingSuccess }: BookingFormProp
         .update({ is_available: false })
         .eq('id', slotId);
 
-      if (slotError) throw slotError;
+      if (slotError) {
+        console.error('Slot update error:', slotError);
+        throw slotError;
+      }
 
       // Send confirmation email
       try {
-        await supabase.functions.invoke('send-appointment-confirmation', {
+        const emailResponse = await supabase.functions.invoke('send-appointment-confirmation', {
           body: {
             doctorName: doctor.name,
             patientEmail: data.patientEmail,
@@ -100,15 +125,30 @@ const BookingForm = ({ doctor, selectedSlot, onBookingSuccess }: BookingFormProp
             consultationFee: doctor.consultation_fee
           }
         });
+
+        console.log('Email function response:', emailResponse);
+
+        if (emailResponse.error) {
+          console.error('Email sending failed:', emailResponse.error);
+          toast({
+            title: "Appointment Booked Successfully!",
+            description: `Your appointment with ${doctor.name} has been confirmed for ${formatDate(date)} at ${time}. However, confirmation email could not be sent.`,
+            variant: "default"
+          });
+        } else {
+          toast({
+            title: "Appointment Booked Successfully!",
+            description: `Your appointment with ${doctor.name} has been confirmed for ${formatDate(date)} at ${time}. You will receive a confirmation email shortly.`,
+          });
+        }
       } catch (emailError) {
         console.error('Email sending failed:', emailError);
-        // Don't fail the booking if email fails
+        toast({
+          title: "Appointment Booked Successfully!",
+          description: `Your appointment with ${doctor.name} has been confirmed for ${formatDate(date)} at ${time}. However, confirmation email could not be sent.`,
+          variant: "default"
+        });
       }
-
-      toast({
-        title: "Appointment Booked Successfully!",
-        description: `Your appointment with ${doctor.name} has been confirmed for ${formatDate(date)} at ${time}. You will receive a confirmation email shortly.`,
-      });
 
       setIsOpen(false);
       form.reset();
