@@ -37,7 +37,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending appointment confirmation emails to:", patientEmail, "and admin");
 
-    const adminEmail = "sakshamspra@gmail.com";
+    const adminEmail = "sakshamsapra11@gmail.com"; // Fixed admin email
 
     // Email template for patient
     const patientEmailHtml = `
@@ -120,6 +120,8 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
+    console.log("Attempting to send patient email to:", patientEmail);
+
     // Send email to patient
     const patientEmailResponse = await resend.emails.send({
       from: "MediLink <onboarding@resend.dev>",
@@ -128,7 +130,15 @@ const handler = async (req: Request): Promise<Response> => {
       html: patientEmailHtml,
     });
 
-    console.log("Patient email sent successfully:", patientEmailResponse);
+    console.log("Patient email response:", patientEmailResponse);
+
+    if (patientEmailResponse.error) {
+      console.error("Patient email error:", patientEmailResponse.error);
+    } else {
+      console.log("Patient email sent successfully with ID:", patientEmailResponse.data?.id);
+    }
+
+    console.log("Attempting to send admin email to:", adminEmail);
 
     // Send email to admin
     const adminEmailResponse = await resend.emails.send({
@@ -138,12 +148,19 @@ const handler = async (req: Request): Promise<Response> => {
       html: adminEmailHtml,
     });
 
-    console.log("Admin email sent successfully:", adminEmailResponse);
+    console.log("Admin email response:", adminEmailResponse);
+
+    if (adminEmailResponse.error) {
+      console.error("Admin email error:", adminEmailResponse.error);
+    } else {
+      console.log("Admin email sent successfully with ID:", adminEmailResponse.data?.id);
+    }
 
     return new Response(JSON.stringify({ 
       success: true, 
       patientEmail: patientEmailResponse,
-      adminEmail: adminEmailResponse 
+      adminEmail: adminEmailResponse,
+      message: "Emails sent successfully"
     }), {
       status: 200,
       headers: {
@@ -156,7 +173,8 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message || "Failed to send email" 
+        error: error.message || "Failed to send email",
+        details: error
       }),
       {
         status: 500,
