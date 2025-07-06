@@ -22,69 +22,69 @@ const Explore = () => {
   const doctors = [
     {
       id: 1,
-      name: "Dr. Sarah Johnson",
+      name: "Dr. Priya Sharma",
       specialization: "Cardiologist",
       category: "cardiologist",
       experience: "15 years",
       rating: 4.9,
-      image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=300&h=300&fit=crop&crop=face",
+      image: "https://images.unsplash.com/photo-1594824804732-ca0916aa2cbc?w=300&h=300&fit=crop&crop=face",
       nextAvailable: "Today, 2:00 PM",
-      consultationFee: "$120"
+      consultationFee: "₹800"
     },
     {
       id: 2,
-      name: "Dr. Michael Chen",
+      name: "Dr. Rajesh Kumar",
       specialization: "Surgeon",
       category: "surgeon",
       experience: "20 years",
       rating: 4.8,
       image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=300&h=300&fit=crop&crop=face",
       nextAvailable: "Tomorrow, 10:00 AM",
-      consultationFee: "$200"
+      consultationFee: "₹1200"
     },
     {
       id: 3,
-      name: "Dr. Emily Rodriguez",
+      name: "Dr. Anita Gupta",
       specialization: "Psychiatrist",
       category: "psychiatrist",
       experience: "12 years",
       rating: 4.9,
-      image: "https://images.unsplash.com/photo-1594824804732-ca0916aa2cbc?w=300&h=300&fit=crop&crop=face",
+      image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=300&h=300&fit=crop&crop=face",
       nextAvailable: "Today, 4:00 PM",
-      consultationFee: "$150"
+      consultationFee: "₹900"
     },
     {
       id: 4,
-      name: "Dr. James Wilson",
+      name: "Dr. Arjun Singh",
       specialization: "ENT Specialist",
       category: "ent",
       experience: "18 years",
       rating: 4.7,
       image: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=300&h=300&fit=crop&crop=face",
       nextAvailable: "Monday, 9:00 AM",
-      consultationFee: "$110"
+      consultationFee: "₹700"
     },
     {
       id: 5,
-      name: "Dr. Lisa Park",
+      name: "Dr. Kavita Patel",
       specialization: "Ophthalmologist",
       category: "ophthalmologist",
       experience: "14 years",
       rating: 4.8,
       image: "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=300&h=300&fit=crop&crop=face",
       nextAvailable: "Tomorrow, 2:30 PM",
-      consultationFee: "$130"
+      consultationFee: "₹750"
     },
     {
       id: 6,
-      name: "Dr. Robert Kumar",
+      name: "Dr. Vikram Mehta",
       specialization: "Cardiologist",
       category: "cardiologist",
       experience: "22 years",
       rating: 4.9,
       image: "https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=300&h=300&fit=crop&crop=face",
       nextAvailable: "Today, 6:00 PM",
-      consultationFee: "$140"
+      consultationFee: "₹1000"
     }
   ];
 

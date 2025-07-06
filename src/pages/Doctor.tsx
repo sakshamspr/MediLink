@@ -11,24 +11,24 @@ const Doctor = () => {
   const { id } = useParams();
   const [selectedSlot, setSelectedSlot] = useState("");
 
-  // Mock doctor data - in real app this would come from Supabase
+  // Mock doctor data with Indian details
   const doctor = {
     id: 1,
-    name: "Dr. Sarah Johnson",
+    name: "Dr. Priya Sharma",
     specialization: "Cardiologist",
     experience: "15 years",
     rating: 4.9,
     reviews: 247,
-    image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&h=400&fit=crop&crop=face",
-    consultationFee: "$120",
-    location: "Heart Care Center, Downtown",
-    phone: "+1 (555) 123-4567",
-    email: "dr.johnson@heartcare.com",
-    about: "Dr. Sarah Johnson is a board-certified cardiologist with over 15 years of experience in treating cardiovascular diseases. She specializes in preventive cardiology, heart failure management, and interventional procedures. Dr. Johnson is known for her compassionate care and patient-centered approach.",
+    image: "https://images.unsplash.com/photo-1594824804732-ca0916aa2cbc?w=400&h=400&fit=crop&crop=face",
+    consultationFee: "₹800",
+    location: "Apollo Hospital, New Delhi",
+    phone: "+91 9876543210",
+    email: "dr.priya.sharma@apollo.com",
+    about: "Dr. Priya Sharma is a renowned cardiologist with over 15 years of experience in treating cardiovascular diseases. She specializes in preventive cardiology, heart failure management, and interventional procedures. Dr. Sharma is known for her compassionate care and patient-centered approach to medicine.",
     education: [
-      "MD - Harvard Medical School",
-      "Residency - Johns Hopkins Hospital",
-      "Fellowship - Cleveland Clinic"
+      "MBBS - All India Institute of Medical Sciences (AIIMS), New Delhi",
+      "MD Cardiology - Post Graduate Institute of Medical Education and Research (PGIMER), Chandigarh",
+      "Fellowship in Interventional Cardiology - Fortis Escorts Heart Institute, New Delhi"
     ],
     availableSlots: [
       { date: "Today", time: "2:00 PM", available: true },

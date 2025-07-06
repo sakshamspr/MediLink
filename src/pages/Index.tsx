@@ -35,7 +35,7 @@ const Index = () => {
         <nav className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Heart className="h-8 w-8 text-blue-600" />
-            <span className="text-2xl font-bold text-gray-800">HealthBook</span>
+            <span className="text-2xl font-bold text-gray-800">MediLink</span>
           </div>
           <Button variant="outline" className="border-blue-200 hover:bg-blue-50">
             Sign In with Google
@@ -70,7 +70,7 @@ const Index = () => {
       <section className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-800 mb-4">
-            Why Choose HealthBook?
+            Why Choose MediLink?
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
             We make healthcare accessible, convenient, and trustworthy for everyone.
@@ -103,7 +103,7 @@ const Index = () => {
             Ready to Take Control of Your Health?
           </h2>
           <p className="text-xl mb-8 opacity-90">
-            Join thousands of patients who trust HealthBook for their healthcare needs.
+            Join thousands of patients who trust MediLink for their healthcare needs.
           </p>
           <Link to="/explore">
             <Button className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 text-lg font-semibold">
@@ -118,10 +118,10 @@ const Index = () => {
         <div className="container mx-auto px-4 text-center">
           <div className="flex items-center justify-center space-x-2 mb-4">
             <Heart className="h-6 w-6 text-blue-600" />
-            <span className="text-xl font-bold text-gray-800">HealthBook</span>
+            <span className="text-xl font-bold text-gray-800">MediLink</span>
           </div>
           <p className="text-gray-600">
-            © 2024 HealthBook. Making healthcare accessible for everyone.
+            © 2024 MediLink. Making healthcare accessible for everyone.
           </p>
         </div>
       </footer>
