@@ -20,6 +20,7 @@ interface AppointmentEmailRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -34,66 +35,62 @@ const handler = async (req: Request): Promise<Response> => {
       consultationFee 
     }: AppointmentEmailRequest = await req.json();
 
+    console.log("Sending appointment confirmation email to:", patientEmail);
+
     const emailResponse = await resend.emails.send({
       from: "MediLink <onboarding@resend.dev>",
       to: [patientEmail],
-      subject: "Appointment Confirmation - MediLink",
+      subject: `Appointment Confirmed with ${doctorName}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background-color: #2563eb; color: white; padding: 20px; text-align: center;">
-            <h1 style="margin: 0;">MediLink</h1>
-            <p style="margin: 5px 0 0 0;">Your Health, Our Priority</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background-color: #3b82f6; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="margin: 0; font-size: 24px;">🩺 MediLink</h1>
+            <h2 style="margin: 10px 0 0 0; font-weight: normal;">Appointment Confirmed!</h2>
           </div>
           
-          <div style="padding: 30px 20px;">
-            <h2 style="color: #2563eb; margin-bottom: 20px;">Appointment Confirmed!</h2>
+          <div style="background-color: #f8fafc; padding: 30px; border-radius: 0 0 8px 8px; border: 1px solid #e2e8f0;">
+            <p style="font-size: 18px; margin-bottom: 20px;">Hello ${patientName},</p>
             
-            <p>Dear ${patientName},</p>
+            <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+              Your appointment has been successfully booked! Here are the details:
+            </p>
             
-            <p>Your appointment has been successfully booked. Here are the details:</p>
-            
-            <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #374151;">Doctor:</td>
-                  <td style="padding: 8px 0; color: #6b7280;">${doctorName}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #374151;">Date:</td>
-                  <td style="padding: 8px 0; color: #6b7280;">${appointmentDate}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #374151;">Time:</td>
-                  <td style="padding: 8px 0; color: #6b7280;">${appointmentTime}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #374151;">Consultation Fee:</td>
-                  <td style="padding: 8px 0; color: #16a34a; font-weight: bold;">₹${consultationFee}</td>
-                </tr>
-              </table>
+            <div style="background-color: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10b981;">
+              <h3 style="margin-top: 0; color: #1f2937;">📅 Appointment Details</h3>
+              <p><strong>Doctor:</strong> ${doctorName}</p>
+              <p><strong>Date:</strong> ${appointmentDate}</p>
+              <p><strong>Time:</strong> ${appointmentTime}</p>
+              <p><strong>Consultation Fee:</strong> ₹${consultationFee}</p>
             </div>
             
-            <div style="background-color: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 8px; margin: 20px 0;">
-              <p style="margin: 0; color: #92400e;"><strong>Important:</strong> Please arrive 15 minutes before your scheduled appointment time. Bring a valid ID and any relevant medical documents.</p>
+            <div style="background-color: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <h4 style="margin-top: 0; color: #92400e;">📝 Important Notes:</h4>
+              <ul style="margin: 10px 0; color: #92400e;">
+                <li>Please arrive 15 minutes before your scheduled appointment</li>
+                <li>Bring a valid ID and any relevant medical documents</li>
+                <li>If you need to reschedule, please contact us at least 24 hours in advance</li>
+              </ul>
             </div>
             
-            <p>If you need to reschedule or cancel your appointment, please contact us at least 24 hours in advance.</p>
+            <p style="font-size: 16px; line-height: 1.6; margin-top: 30px;">
+              We look forward to seeing you at your appointment. If you have any questions or need to make changes, 
+              please don't hesitate to contact us.
+            </p>
             
-            <p>Thank you for choosing MediLink for your healthcare needs.</p>
-            
-            <p>Best regards,<br>The MediLink Team</p>
-          </div>
-          
-          <div style="background-color: #f8fafc; padding: 20px; text-align: center; color: #6b7280; font-size: 14px;">
-            <p style="margin: 0;">© 2024 MediLink. Making healthcare accessible for everyone.</p>
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+              <p style="color: #6b7280; font-size: 14px;">
+                Best regards,<br>
+                <strong>The MediLink Team</strong>
+              </p>
+            </div>
           </div>
         </div>
       `,
     });
 
-    console.log("Appointment confirmation email sent:", emailResponse);
+    console.log("Email sent successfully:", emailResponse);
 
-    return new Response(JSON.stringify(emailResponse), {
+    return new Response(JSON.stringify({ success: true, data: emailResponse }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
@@ -101,9 +98,12 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
   } catch (error: any) {
-    console.error("Error sending appointment confirmation:", error);
+    console.error("Error in send-appointment-confirmation function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        success: false, 
+        error: error.message || "Failed to send email" 
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
