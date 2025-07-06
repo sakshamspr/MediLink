@@ -3,51 +3,147 @@ import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Star, Clock, DollarSign, MapPin, Phone, Mail, ArrowLeft, Calendar } from "lucide-react";
+import { Star, IndianRupee, MapPin, Phone, Mail, ArrowLeft, Calendar } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { useState } from "react";
+import { useDoctor, useAvailableSlots } from "@/hooks/useDoctors";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Doctor = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
+  const { user, signInWithGoogle } = useAuth();
+  const { toast } = useToast();
   const [selectedSlot, setSelectedSlot] = useState("");
+  const [isBooking, setIsBooking] = useState(false);
 
-  // Mock doctor data with Indian details
-  const doctor = {
-    id: 1,
-    name: "Dr. Priya Sharma",
-    specialization: "Cardiologist",
-    experience: "15 years",
-    rating: 4.9,
-    reviews: 247,
-    image: "https://images.unsplash.com/photo-1594824804732-ca0916aa2cbc?w=400&h=400&fit=crop&crop=face",
-    consultationFee: "₹800",
-    location: "Apollo Hospital, New Delhi",
-    phone: "+91 9876543210",
-    email: "dr.priya.sharma@apollo.com",
-    about: "Dr. Priya Sharma is a renowned cardiologist with over 15 years of experience in treating cardiovascular diseases. She specializes in preventive cardiology, heart failure management, and interventional procedures. Dr. Sharma is known for her compassionate care and patient-centered approach to medicine.",
-    education: [
-      "MBBS - All India Institute of Medical Sciences (AIIMS), New Delhi",
-      "MD Cardiology - Post Graduate Institute of Medical Education and Research (PGIMER), Chandigarh",
-      "Fellowship in Interventional Cardiology - Fortis Escorts Heart Institute, New Delhi"
-    ],
-    availableSlots: [
-      { date: "Today", time: "2:00 PM", available: true },
-      { date: "Today", time: "3:30 PM", available: true },
-      { date: "Today", time: "5:00 PM", available: false },
-      { date: "Tomorrow", time: "9:00 AM", available: true },
-      { date: "Tomorrow", time: "10:30 AM", available: true },
-      { date: "Tomorrow", time: "2:00 PM", available: true },
-    ]
+  const { data: doctor, isLoading } = useDoctor(id!);
+  const { data: availableSlots = [] } = useAvailableSlots(id!);
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    if (date.toDateString() === today.toDateString()) return "Today";
+    if (date.toDateString() === tomorrow.toDateString()) return "Tomorrow";
+    return date.toLocaleDateString('en-IN', { weekday: 'long', month: 'short', day: 'numeric' });
   };
 
-  const handleBookAppointment = () => {
-    if (!selectedSlot) {
-      alert("Please select an appointment slot");
+  const handleBookAppointment = async () => {
+    if (!user) {
+      await signInWithGoogle();
       return;
     }
-    // In real app, this would integrate with Supabase
-    alert(`Appointment booked for ${selectedSlot}! You will receive a confirmation email shortly.`);
+
+    if (!selectedSlot) {
+      toast({
+        title: "Please select a time slot",
+        description: "Choose an available appointment slot to continue.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsBooking(true);
+
+    try {
+      const [slotId, date, time] = selectedSlot.split('|');
+      
+      // Create appointment
+      const { error: appointmentError } = await supabase
+        .from('appointments')
+        .insert({
+          user_id: user.id,
+          doctor_id: id!,
+          slot_id: slotId,
+          appointment_date: date,
+          appointment_time: time,
+          status: 'confirmed'
+        });
+
+      if (appointmentError) throw appointmentError;
+
+      // Mark slot as unavailable
+      const { error: slotError } = await supabase
+        .from('available_slots')
+        .update({ is_available: false })
+        .eq('id', slotId);
+
+      if (slotError) throw slotError;
+
+      // Send confirmation email
+      try {
+        await supabase.functions.invoke('send-appointment-confirmation', {
+          body: {
+            doctorName: doctor?.name,
+            patientEmail: user.email,
+            patientName: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Patient',
+            appointmentDate: formatDate(date),
+            appointmentTime: time,
+            consultationFee: doctor?.consultation_fee
+          }
+        });
+      } catch (emailError) {
+        console.error('Email sending failed:', emailError);
+        // Don't fail the booking if email fails
+      }
+
+      toast({
+        title: "Appointment Booked Successfully!",
+        description: `Your appointment with ${doctor?.name} has been confirmed for ${formatDate(date)} at ${time}. You will receive a confirmation email shortly.`,
+      });
+
+      setSelectedSlot("");
+    } catch (error: any) {
+      console.error('Booking error:', error);
+      toast({
+        title: "Booking Failed",
+        description: error.message || "Something went wrong. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsBooking(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">Loading doctor details...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!doctor) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">Doctor not found.</p>
+            <Link to="/explore" className="text-blue-600 hover:underline">
+              Browse all doctors
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Group slots by date
+  const slotsByDate = availableSlots.reduce((acc: any, slot: any) => {
+    if (!acc[slot.slot_date]) acc[slot.slot_date] = [];
+    acc[slot.slot_date].push(slot);
+    return acc;
+  }, {});
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -67,7 +163,7 @@ const Doctor = () => {
               <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row gap-6">
                   <img
-                    src={doctor.image}
+                    src={doctor.image_url}
                     alt={doctor.name}
                     className="w-32 h-32 rounded-full object-cover mx-auto md:mx-0"
                   />
@@ -80,7 +176,6 @@ const Doctor = () => {
                       <div className="flex items-center">
                         <Star className="h-4 w-4 text-yellow-400 fill-current" />
                         <span className="ml-1 font-semibold">{doctor.rating}</span>
-                        <span className="text-gray-500 ml-1">({doctor.reviews} reviews)</span>
                       </div>
                       <div className="text-gray-600">{doctor.experience} experience</div>
                     </div>
@@ -106,7 +201,7 @@ const Doctor = () => {
             {/* About */}
             <Card>
               <CardHeader>
-                <CardTitle>About Dr. {doctor.name.split(' ')[1]}</CardTitle>
+                <CardTitle>About {doctor.name.split(' ')[1]}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 mb-4">{doctor.about}</p>
@@ -125,12 +220,12 @@ const Doctor = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <DollarSign className="h-5 w-5 mr-2" />
+                  <IndianRupee className="h-5 w-5 mr-2" />
                   Consultation Fee
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-green-600 mb-2">{doctor.consultationFee}</div>
+                <div className="text-3xl font-bold text-green-600 mb-2">₹{doctor.consultation_fee}</div>
                 <p className="text-gray-600 text-sm">Per consultation</p>
               </CardContent>
             </Card>
@@ -144,26 +239,20 @@ const Doctor = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {Object.entries(
-                    doctor.availableSlots.reduce((acc, slot) => {
-                      if (!acc[slot.date]) acc[slot.date] = [];
-                      acc[slot.date].push(slot);
-                      return acc;
-                    }, {} as Record<string, typeof doctor.availableSlots>)
-                  ).map(([date, slots]) => (
+                  {Object.entries(slotsByDate).map(([date, slots]: [string, any[]]) => (
                     <div key={date}>
-                      <h4 className="font-semibold mb-2 text-gray-700">{date}</h4>
+                      <h4 className="font-semibold mb-2 text-gray-700">{formatDate(date)}</h4>
                       <div className="grid grid-cols-2 gap-2">
-                        {slots.map((slot, index) => (
+                        {slots.map((slot) => (
                           <Button
-                            key={index}
-                            variant={selectedSlot === `${slot.date} ${slot.time}` ? "default" : "outline"}
+                            key={slot.id}
+                            variant={selectedSlot === `${slot.id}|${slot.slot_date}|${slot.slot_time}` ? "default" : "outline"}
                             size="sm"
-                            disabled={!slot.available}
-                            onClick={() => setSelectedSlot(`${slot.date} ${slot.time}`)}
+                            disabled={!slot.is_available}
+                            onClick={() => setSelectedSlot(`${slot.id}|${slot.slot_date}|${slot.slot_time}`)}
                             className="text-xs"
                           >
-                            {slot.time}
+                            {slot.slot_time}
                           </Button>
                         ))}
                       </div>
@@ -173,9 +262,9 @@ const Doctor = () => {
                 <Button 
                   className="w-full mt-6" 
                   onClick={handleBookAppointment}
-                  disabled={!selectedSlot}
+                  disabled={!selectedSlot || isBooking}
                 >
-                  Book Appointment
+                  {isBooking ? "Booking..." : user ? "Book Appointment" : "Sign In to Book"}
                 </Button>
                 <p className="text-xs text-gray-500 mt-2 text-center">
                   You'll receive confirmation via email

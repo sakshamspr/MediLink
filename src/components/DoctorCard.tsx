@@ -2,19 +2,9 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, Clock, DollarSign } from "lucide-react";
+import { Star, Clock, IndianRupee } from "lucide-react";
 import { Link } from "react-router-dom";
-
-interface Doctor {
-  id: number;
-  name: string;
-  specialization: string;
-  experience: string;
-  rating: number;
-  image: string;
-  nextAvailable: string;
-  consultationFee: string;
-}
+import { Doctor } from "@/hooks/useDoctors";
 
 interface DoctorCardProps {
   doctor: Doctor;
@@ -26,7 +16,7 @@ const DoctorCard = ({ doctor }: DoctorCardProps) => {
       <CardContent className="p-6">
         <div className="flex items-start space-x-4">
           <img
-            src={doctor.image}
+            src={doctor.image_url}
             alt={doctor.name}
             className="w-16 h-16 rounded-full object-cover"
           />
@@ -49,11 +39,11 @@ const DoctorCard = ({ doctor }: DoctorCardProps) => {
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center text-gray-600">
               <Clock className="h-4 w-4 mr-1" />
-              {doctor.nextAvailable}
+              Available Today
             </div>
             <div className="flex items-center font-semibold text-green-600">
-              <DollarSign className="h-4 w-4 mr-1" />
-              {doctor.consultationFee}
+              <IndianRupee className="h-4 w-4 mr-1" />
+              {doctor.consultation_fee}
             </div>
           </div>
           

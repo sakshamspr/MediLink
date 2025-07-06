@@ -1,7 +1,7 @@
 
-import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import AuthButton from "./AuthButton";
 
 const Navigation = () => {
   const location = useLocation();
@@ -36,9 +36,7 @@ const Navigation = () => {
             </Link>
           </div>
 
-          <Button variant="outline" className="border-blue-200 hover:bg-blue-50">
-            Sign In with Google
-          </Button>
+          <AuthButton />
         </nav>
       </div>
     </header>
