@@ -20,26 +20,31 @@ const HospitalMap = ({ userLocation, hospitals, searchRadius, onHospitalsFound, 
   const { toast } = useToast();
 
   useEffect(() => {
-    if (userLocation && apiKey) {
+    if (userLocation && apiKey && searchRadius) {
       fetchNearbyHospitals(apiKey);
     }
   }, [userLocation, apiKey, searchRadius]);
 
   const fetchNearbyHospitals = async (apiKey: string) => {
-    if (!apiKey || !userLocation) return;
+    if (!apiKey || !userLocation || !searchRadius) return;
 
     onLoadingChange(true);
     
     try {
+      // Fix the API call to properly include the search radius
       const response = await fetch(
         `https://api.geoapify.com/v2/places?categories=healthcare.hospital&filter=circle:${userLocation.lng},${userLocation.lat},${searchRadius}&bias=proximity:${userLocation.lng},${userLocation.lat}&limit=20&apiKey=${apiKey}`
       );
 
       if (!response.ok) {
-        throw new Error('Failed to fetch hospitals');
+        throw new Error(`API Error: ${response.status} - ${response.statusText}`);
       }
 
       const data = await response.json();
+      
+      if (!data.features) {
+        throw new Error('Invalid response format from API');
+      }
       
       const hospitalData: Hospital[] = data.features.map((feature: any, index: number) => ({
         id: feature.properties.place_id || `hospital-${index}`,
@@ -50,7 +55,6 @@ const HospitalMap = ({ userLocation, hospitals, searchRadius, onHospitalsFound, 
           lng: feature.geometry.coordinates[0]
         },
         distance: feature.properties.distance,
-        phone: feature.properties.contact?.phone,
         type: feature.properties.categories?.[0]?.replace('healthcare.', '').replace('_', ' ') || "Hospital"
       }));
 
@@ -59,15 +63,16 @@ const HospitalMap = ({ userLocation, hospitals, searchRadius, onHospitalsFound, 
       
       toast({
         title: "Hospitals found",
-        description: `Found ${hospitalData.length} hospitals nearby.`,
+        description: `Found ${hospitalData.length} hospitals within ${(searchRadius / 1000).toFixed(1)} km.`,
       });
     } catch (error) {
       console.error("Error fetching hospitals:", error);
       toast({
         title: "Error",
-        description: "Failed to fetch nearby hospitals. Please check your API key.",
+        description: `Failed to fetch nearby hospitals: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
+      onHospitalsFound([]);
     } finally {
       onLoadingChange(false);
     }
@@ -79,26 +84,50 @@ const HospitalMap = ({ userLocation, hospitals, searchRadius, onHospitalsFound, 
     // Clear existing map content
     mapRef.current.innerHTML = "";
 
-    // Create a modern map container
+    // Create a modern map container with enhanced styling
     const mapContainer = document.createElement('div');
-    mapContainer.className = 'w-full h-80 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl relative overflow-hidden shadow-lg border border-gray-200';
+    mapContainer.className = 'w-full h-96 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl relative overflow-hidden shadow-xl border border-gray-200';
 
-    // Create static map image with better styling
+    // Create static map image with better styling and proper zoom level based on radius
     const mapImg = document.createElement('img');
-    const markers = hospitalData.slice(0, 10).map(hospital => 
+    
+    // Calculate appropriate zoom level based on search radius
+    const getZoomLevel = (radiusInMeters: number) => {
+      if (radiusInMeters <= 1000) return 15;
+      if (radiusInMeters <= 2000) return 14;
+      if (radiusInMeters <= 5000) return 13;
+      if (radiusInMeters <= 10000) return 12;
+      if (radiusInMeters <= 15000) return 11;
+      return 10;
+    };
+    
+    const zoomLevel = getZoomLevel(searchRadius);
+    
+    const markers = hospitalData.slice(0, 15).map(hospital => 
       `lonlat:${hospital.coordinates.lng},${hospital.coordinates.lat};color:%23dc2626;size:medium;type:material;icon:hospital;icontype:material`
     ).join('|');
     
     const userMarker = `lonlat:${userLocation.lng},${userLocation.lat};color:%232563eb;size:large;type:material;icon:person;icontype:material`;
-    const allMarkers = `${userMarker}|${markers}`;
+    const allMarkers = markers ? `${userMarker}|${markers}` : userMarker;
 
-    mapImg.src = `https://maps.geoapify.com/v1/staticmap?style=klokantech-basic&width=800&height=400&center=lonlat:${userLocation.lng},${userLocation.lat}&zoom=13&marker=${allMarkers}&apiKey=${apiKey}`;
+    mapImg.src = `https://maps.geoapify.com/v1/staticmap?style=klokantech-basic&width=900&height=500&center=lonlat:${userLocation.lng},${userLocation.lat}&zoom=${zoomLevel}&marker=${allMarkers}&apiKey=${apiKey}`;
     mapImg.className = 'w-full h-full object-cover transition-opacity duration-300';
     mapImg.alt = 'Hospital locations map';
     
     // Add loading state
     mapImg.onload = () => {
       mapImg.style.opacity = '1';
+    };
+    mapImg.onerror = () => {
+      console.error('Failed to load map image');
+      mapContainer.innerHTML = `
+        <div class="flex items-center justify-center h-full bg-gray-100 text-gray-500">
+          <div class="text-center">
+            <p class="mb-2">Map failed to load</p>
+            <p class="text-sm">Please check your internet connection</p>
+          </div>
+        </div>
+      `;
     };
     mapImg.style.opacity = '0';
 
@@ -114,18 +143,19 @@ const HospitalMap = ({ userLocation, hospitals, searchRadius, onHospitalsFound, 
       </div>
       <div class="flex items-center gap-3">
         <div class="w-4 h-4 bg-red-600 rounded-full shadow-sm"></div>
-        <span class="text-gray-700 font-medium">Hospitals</span>
+        <span class="text-gray-700 font-medium">Hospitals (${hospitalData.length})</span>
       </div>
     `;
     mapContainer.appendChild(legend);
 
-    // Add distance info overlay with dynamic radius
+    // Add search radius info overlay
     const infoOverlay = document.createElement('div');
     infoOverlay.className = 'absolute top-4 right-4 bg-white/95 backdrop-blur-sm p-3 rounded-lg shadow-lg border border-gray-200 text-sm';
     const radiusKm = (searchRadius / 1000).toFixed(1);
     infoOverlay.innerHTML = `
       <div class="text-gray-600 font-medium">Search Radius</div>
-      <div class="text-blue-600 font-bold">${radiusKm} km</div>
+      <div class="text-blue-600 font-bold text-lg">${radiusKm} km</div>
+      <div class="text-xs text-gray-500 mt-1">Zoom: ${zoomLevel}</div>
     `;
     mapContainer.appendChild(infoOverlay);
 
