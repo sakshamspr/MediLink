@@ -1,5 +1,5 @@
 
-import { Heart } from "lucide-react";
+import { Heart, hospital } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import AuthButton from "./AuthButton";
 
@@ -33,6 +33,14 @@ const Navigation = () => {
               }`}
             >
               Find Doctors
+            </Link>
+            <Link 
+              to="/hospitals" 
+              className={`text-gray-600 hover:text-blue-600 transition-colors ${
+                isActive('/hospitals') ? 'text-blue-600 font-medium' : ''
+              }`}
+            >
+              Find Hospitals
             </Link>
           </div>
 
