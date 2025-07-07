@@ -50,7 +50,7 @@ const HospitalMap = ({ userLocation, hospitals, onHospitalsFound, onLoadingChang
         },
         distance: feature.properties.distance,
         phone: feature.properties.contact?.phone,
-        type: feature.properties.categories?.[0] || "Hospital"
+        type: feature.properties.categories?.[0]?.replace('healthcare.', '').replace('_', ' ') || "Hospital"
       }));
 
       onHospitalsFound(hospitalData);
@@ -78,39 +78,54 @@ const HospitalMap = ({ userLocation, hospitals, onHospitalsFound, onLoadingChang
     // Clear existing map content
     mapRef.current.innerHTML = "";
 
-    // Create a simple interactive map using Geoapify Static Maps
+    // Create a modern map container
     const mapContainer = document.createElement('div');
-    mapContainer.className = 'w-full h-96 bg-gray-100 rounded-lg relative overflow-hidden';
+    mapContainer.className = 'w-full h-80 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl relative overflow-hidden shadow-lg border border-gray-200';
 
-    // Create static map image
+    // Create static map image with better styling
     const mapImg = document.createElement('img');
     const markers = hospitalData.slice(0, 10).map(hospital => 
-      `lonlat:${hospital.coordinates.lng},${hospital.coordinates.lat};color:%23ff0000;size:medium`
+      `lonlat:${hospital.coordinates.lng},${hospital.coordinates.lat};color:%23dc2626;size:medium;type:material;icon:hospital;icontype:material`
     ).join('|');
     
-    const userMarker = `lonlat:${userLocation.lng},${userLocation.lat};color:%230000ff;size:large`;
+    const userMarker = `lonlat:${userLocation.lng},${userLocation.lat};color:%232563eb;size:large;type:material;icon:person;icontype:material`;
     const allMarkers = `${userMarker}|${markers}`;
 
-    mapImg.src = `https://maps.geoapify.com/v1/staticmap?style=osm-bright&width=600&height=400&center=lonlat:${userLocation.lng},${userLocation.lat}&zoom=13&marker=${allMarkers}&apiKey=${apiKey}`;
-    mapImg.className = 'w-full h-full object-cover';
+    mapImg.src = `https://maps.geoapify.com/v1/staticmap?style=klokantech-basic&width=800&height=400&center=lonlat:${userLocation.lng},${userLocation.lat}&zoom=13&marker=${allMarkers}&apiKey=${apiKey}`;
+    mapImg.className = 'w-full h-full object-cover transition-opacity duration-300';
     mapImg.alt = 'Hospital locations map';
+    
+    // Add loading state
+    mapImg.onload = () => {
+      mapImg.style.opacity = '1';
+    };
+    mapImg.style.opacity = '0';
 
     mapContainer.appendChild(mapImg);
 
-    // Add legend
+    // Add modern legend with better styling
     const legend = document.createElement('div');
-    legend.className = 'absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-md text-sm';
+    legend.className = 'absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm p-4 rounded-lg shadow-lg border border-gray-200 text-sm';
     legend.innerHTML = `
-      <div class="flex items-center gap-2 mb-2">
-        <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
-        <span>Your Location</span>
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-4 h-4 bg-blue-600 rounded-full shadow-sm"></div>
+        <span class="text-gray-700 font-medium">Your Location</span>
       </div>
-      <div class="flex items-center gap-2">
-        <div class="w-3 h-3 bg-red-500 rounded-full"></div>
-        <span>Hospitals</span>
+      <div class="flex items-center gap-3">
+        <div class="w-4 h-4 bg-red-600 rounded-full shadow-sm"></div>
+        <span class="text-gray-700 font-medium">Hospitals</span>
       </div>
     `;
     mapContainer.appendChild(legend);
+
+    // Add distance info overlay
+    const infoOverlay = document.createElement('div');
+    infoOverlay.className = 'absolute top-4 right-4 bg-white/95 backdrop-blur-sm p-3 rounded-lg shadow-lg border border-gray-200 text-sm';
+    infoOverlay.innerHTML = `
+      <div class="text-gray-600 font-medium">Search Radius</div>
+      <div class="text-blue-600 font-bold">5 km</div>
+    `;
+    mapContainer.appendChild(infoOverlay);
 
     mapRef.current.appendChild(mapContainer);
   };
@@ -119,7 +134,7 @@ const HospitalMap = ({ userLocation, hospitals, onHospitalsFound, onLoadingChang
     <div className="w-full">
       <div ref={mapRef} />
       {showApiInput && (
-        <div className="p-4 border-t">
+        <div className="p-4 border-t bg-gray-50">
           <div className="flex gap-2">
             <Input
               type="password"

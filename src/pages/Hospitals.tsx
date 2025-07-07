@@ -51,7 +51,7 @@ const Hospitals = () => {
         setUserLocation(location);
         setLocationLoading(false);
         toast({
-          title: "Location found",
+          title: "Location detected",
           description: "Your location has been detected successfully.",
         });
       },
@@ -73,50 +73,72 @@ const Hospitals = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <Navigation />
       
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4 flex items-center justify-center gap-3">
-            <Hospital className="h-10 w-10 text-blue-600" />
+        {/* Modern Header */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mb-6 shadow-lg">
+            <Hospital className="h-8 w-8 text-white" />
+          </div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Find Nearby Hospitals
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Locate hospitals and medical facilities near you with our interactive map and comprehensive directory.
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
+            Discover hospitals and medical facilities in your area with our interactive map and comprehensive directory.
           </p>
         </div>
 
         {/* Location Section */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <LocateIcon className="h-5 w-5" />
-              Your Location
+        <Card className="mb-8 border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-3 text-xl">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <LocateIcon className="h-4 w-4 text-blue-600" />
+              </div>
+              Location Access
             </CardTitle>
           </CardHeader>
           <CardContent>
             {!userLocation ? (
-              <div className="text-center py-6">
-                <p className="text-gray-600 mb-4">
-                  We need your location to find nearby hospitals.
+              <div className="text-center py-8">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <LocateIcon className="h-8 w-8 text-blue-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Enable Location Services</h3>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                  We need access to your location to find the nearest hospitals and provide accurate directions.
                 </p>
                 <Button 
                   onClick={getUserLocation}
                   disabled={locationLoading}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-3 rounded-lg shadow-lg transition-all duration-200"
+                  size="lg"
                 >
-                  {locationLoading ? "Getting Location..." : "Get My Location"}
+                  {locationLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                      Detecting Location...
+                    </>
+                  ) : (
+                    <>
+                      <LocateIcon className="h-4 w-4 mr-2" />
+                      Get My Location
+                    </>
+                  )}
                 </Button>
               </div>
             ) : (
-              <div className="text-center py-4">
-                <p className="text-green-600 font-medium">
-                  ✓ Location detected successfully
-                </p>
-                <p className="text-sm text-gray-600 mt-1">
-                  Lat: {userLocation.lat.toFixed(6)}, Lng: {userLocation.lng.toFixed(6)}
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs">✓</span>
+                  </div>
+                  <span className="text-green-800 font-semibold">Location detected successfully</span>
+                </div>
+                <p className="text-sm text-green-700">
+                  Coordinates: {userLocation.lat.toFixed(6)}, {userLocation.lng.toFixed(6)}
                 </p>
               </div>
             )}
@@ -125,14 +147,16 @@ const Hospitals = () => {
 
         {/* Map and Results */}
         {userLocation && (
-          <div className="grid lg:grid-cols-2 gap-8">
+          <div className="grid lg:grid-cols-5 gap-8">
             {/* Map Section */}
-            <div className="lg:col-span-1">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Map className="h-5 w-5" />
-                    Hospital Map
+            <div className="lg:col-span-3">
+              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-3 text-xl">
+                    <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+                      <Map className="h-4 w-4 text-indigo-600" />
+                    </div>
+                    Interactive Map
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -147,10 +171,20 @@ const Hospitals = () => {
             </div>
 
             {/* Results Section */}
-            <div className="lg:col-span-1">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Nearby Hospitals ({hospitals.length})</CardTitle>
+            <div className="lg:col-span-2">
+              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                        <Hospital className="h-4 w-4 text-red-600" />
+                      </div>
+                      <span>Nearby Hospitals</span>
+                    </div>
+                    <span className="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full font-medium">
+                      {hospitals.length}
+                    </span>
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <HospitalList hospitals={hospitals} loading={loading} />
