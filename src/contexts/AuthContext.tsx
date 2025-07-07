@@ -6,8 +6,6 @@ import { supabase } from '@/integrations/supabase/client';
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  signInWithGoogle: () => Promise<void>;
-  signOut: () => Promise<void>;
   loading: boolean;
 }
 
@@ -46,25 +44,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signInWithGoogle = async () => {
-    const redirectUrl = `${window.location.origin}/`;
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: redirectUrl
-      }
-    });
-  };
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
-
   const value = {
     user,
     session,
-    signInWithGoogle,
-    signOut,
     loading
   };
 

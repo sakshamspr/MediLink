@@ -37,9 +37,6 @@ const Index = () => {
             <Heart className="h-8 w-8 text-blue-600" />
             <span className="text-2xl font-bold text-gray-800">MediLink</span>
           </div>
-          <Button variant="outline" className="border-blue-200 hover:bg-blue-50">
-            Sign In with Google
-          </Button>
         </nav>
       </header>
 
