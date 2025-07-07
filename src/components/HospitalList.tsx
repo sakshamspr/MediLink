@@ -90,7 +90,7 @@ const HospitalList = ({ hospitals, loading }: HospitalListProps) => {
                   {hospital.address}
                 </p>
                 
-                <div className="flex flex-wrap gap-2 mb-3">
+                <div className="flex flex-wrap gap-2">
                   {hospital.distance && (
                     <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200">
                       📍 {formatDistance(hospital.distance)}
@@ -102,17 +102,6 @@ const HospitalList = ({ hospitals, loading }: HospitalListProps) => {
                     </Badge>
                   )}
                 </div>
-
-                {hospital.phone && (
-                  <div className="pt-3 border-t border-gray-100">
-                    <a 
-                      href={`tel:${hospital.phone}`}
-                      className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors"
-                    >
-                      📞 {hospital.phone}
-                    </a>
-                  </div>
-                )}
               </div>
             </div>
           </CardContent>

@@ -8,11 +8,12 @@ import type { Hospital } from "@/pages/Hospitals";
 interface HospitalMapProps {
   userLocation: { lat: number; lng: number };
   hospitals: Hospital[];
+  searchRadius: number;
   onHospitalsFound: (hospitals: Hospital[]) => void;
   onLoadingChange: (loading: boolean) => void;
 }
 
-const HospitalMap = ({ userLocation, hospitals, onHospitalsFound, onLoadingChange }: HospitalMapProps) => {
+const HospitalMap = ({ userLocation, hospitals, searchRadius, onHospitalsFound, onLoadingChange }: HospitalMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const [apiKey] = useState("aa0083d6a89a4a5ab0f7b5565779522d");
   const [showApiInput, setShowApiInput] = useState(false);
@@ -22,7 +23,7 @@ const HospitalMap = ({ userLocation, hospitals, onHospitalsFound, onLoadingChang
     if (userLocation && apiKey) {
       fetchNearbyHospitals(apiKey);
     }
-  }, [userLocation, apiKey]);
+  }, [userLocation, apiKey, searchRadius]);
 
   const fetchNearbyHospitals = async (apiKey: string) => {
     if (!apiKey || !userLocation) return;
@@ -31,7 +32,7 @@ const HospitalMap = ({ userLocation, hospitals, onHospitalsFound, onLoadingChang
     
     try {
       const response = await fetch(
-        `https://api.geoapify.com/v2/places?categories=healthcare.hospital&filter=circle:${userLocation.lng},${userLocation.lat},5000&bias=proximity:${userLocation.lng},${userLocation.lat}&limit=20&apiKey=${apiKey}`
+        `https://api.geoapify.com/v2/places?categories=healthcare.hospital&filter=circle:${userLocation.lng},${userLocation.lat},${searchRadius}&bias=proximity:${userLocation.lng},${userLocation.lat}&limit=20&apiKey=${apiKey}`
       );
 
       if (!response.ok) {
@@ -118,12 +119,13 @@ const HospitalMap = ({ userLocation, hospitals, onHospitalsFound, onLoadingChang
     `;
     mapContainer.appendChild(legend);
 
-    // Add distance info overlay
+    // Add distance info overlay with dynamic radius
     const infoOverlay = document.createElement('div');
     infoOverlay.className = 'absolute top-4 right-4 bg-white/95 backdrop-blur-sm p-3 rounded-lg shadow-lg border border-gray-200 text-sm';
+    const radiusKm = (searchRadius / 1000).toFixed(1);
     infoOverlay.innerHTML = `
       <div class="text-gray-600 font-medium">Search Radius</div>
-      <div class="text-blue-600 font-bold">5 km</div>
+      <div class="text-blue-600 font-bold">${radiusKm} km</div>
     `;
     mapContainer.appendChild(infoOverlay);
 

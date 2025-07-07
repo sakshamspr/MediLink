@@ -1,8 +1,10 @@
 
 import { useState, useEffect } from "react";
-import { Hospital, LocateIcon, Map } from "lucide-react";
+import { Hospital, LocateIcon, Map, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import Navigation from "@/components/Navigation";
 import HospitalMap from "@/components/HospitalMap";
 import HospitalList from "@/components/HospitalList";
@@ -27,6 +29,7 @@ const Hospitals = () => {
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [loading, setLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
+  const [searchRadius, setSearchRadius] = useState(5000); // Default 5km in meters
   const { toast } = useToast();
 
   const getUserLocation = () => {
@@ -71,6 +74,15 @@ const Hospitals = () => {
       }
     );
   };
+
+  const radiusOptions = [
+    { value: 1000, label: "1 km" },
+    { value: 2000, label: "2 km" },
+    { value: 5000, label: "5 km" },
+    { value: 10000, label: "10 km" },
+    { value: 15000, label: "15 km" },
+    { value: 25000, label: "25 km" },
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
@@ -145,6 +157,49 @@ const Hospitals = () => {
           </CardContent>
         </Card>
 
+        {/* Search Radius Selector */}
+        {userLocation && (
+          <Card className="mb-8 border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-3 text-xl">
+                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <Settings className="h-4 w-4 text-purple-600" />
+                </div>
+                Search Settings
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Search Radius
+                  </label>
+                  <Select 
+                    value={searchRadius.toString()} 
+                    onValueChange={(value) => setSearchRadius(parseInt(value))}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select search radius" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {radiusOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value.toString()}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm text-blue-700">
+                    <span className="font-medium">Current radius:</span> {(searchRadius / 1000).toFixed(1)} km
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Map and Results */}
         {userLocation && (
           <div className="grid lg:grid-cols-5 gap-8">
@@ -163,6 +218,7 @@ const Hospitals = () => {
                   <HospitalMap 
                     userLocation={userLocation}
                     hospitals={hospitals}
+                    searchRadius={searchRadius}
                     onHospitalsFound={setHospitals}
                     onLoadingChange={setLoading}
                   />
