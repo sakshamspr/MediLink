@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { hospital, locate, map } from "lucide-react";
+import { Hospital, LocateIcon, Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Navigation from "@/components/Navigation";
@@ -80,7 +80,7 @@ const Hospitals = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-4 flex items-center justify-center gap-3">
-            <hospital className="h-10 w-10 text-blue-600" />
+            <Hospital className="h-10 w-10 text-blue-600" />
             Find Nearby Hospitals
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -92,7 +92,7 @@ const Hospitals = () => {
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <locate className="h-5 w-5" />
+              <LocateIcon className="h-5 w-5" />
               Your Location
             </CardTitle>
           </CardHeader>
@@ -131,7 +131,7 @@ const Hospitals = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <map className="h-5 w-5" />
+                    <Map className="h-5 w-5" />
                     Hospital Map
                   </CardTitle>
                 </CardHeader>

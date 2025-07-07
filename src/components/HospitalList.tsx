@@ -1,10 +1,10 @@
 
-import { hospital } from "lucide-react";
+import { Hospital } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import type { Hospital } from "@/pages/Hospitals";
+import type { Hospital as HospitalType } from "@/pages/Hospitals";
 
 interface HospitalListProps {
-  hospitals: Hospital[];
+  hospitals: HospitalType[];
   loading: boolean;
 }
 
@@ -24,7 +24,7 @@ const HospitalList = ({ hospitals, loading }: HospitalListProps) => {
   if (hospitals.length === 0) {
     return (
       <div className="text-center py-8">
-        <hospital className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+        <Hospital className="h-12 w-12 text-gray-400 mx-auto mb-4" />
         <p className="text-gray-500">No hospitals found nearby.</p>
         <p className="text-sm text-gray-400 mt-2">
           Try expanding your search radius or check your location.
@@ -68,7 +68,7 @@ const HospitalList = ({ hospitals, loading }: HospitalListProps) => {
                 </div>
               </div>
               <div className="ml-4">
-                <hospital className="h-6 w-6 text-blue-600" />
+                <Hospital className="h-6 w-6 text-blue-600" />
               </div>
             </div>
             {hospital.phone && (

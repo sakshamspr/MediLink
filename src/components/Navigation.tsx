@@ -1,5 +1,5 @@
 
-import { Heart, hospital } from "lucide-react";
+import { Heart, Hospital } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import AuthButton from "./AuthButton";
 

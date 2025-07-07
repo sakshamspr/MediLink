@@ -14,9 +14,15 @@ interface HospitalMapProps {
 
 const HospitalMap = ({ userLocation, hospitals, onHospitalsFound, onLoadingChange }: HospitalMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
-  const [apiKey, setApiKey] = useState("");
-  const [showApiInput, setShowApiInput] = useState(true);
+  const [apiKey] = useState("aa0083d6a89a4a5ab0f7b5565779522d");
+  const [showApiInput, setShowApiInput] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (userLocation && apiKey) {
+      fetchNearbyHospitals(apiKey);
+    }
+  }, [userLocation, apiKey]);
 
   const fetchNearbyHospitals = async (apiKey: string) => {
     if (!apiKey || !userLocation) return;
@@ -109,63 +115,23 @@ const HospitalMap = ({ userLocation, hospitals, onHospitalsFound, onLoadingChang
     mapRef.current.appendChild(mapContainer);
   };
 
-  const handleApiKeySubmit = () => {
-    if (!apiKey.trim()) {
-      toast({
-        title: "API Key Required",
-        description: "Please enter your Geoapify API key.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setShowApiInput(false);
-    fetchNearbyHospitals(apiKey);
-  };
-
-  if (showApiInput) {
-    return (
-      <div className="p-6 text-center">
-        <h3 className="text-lg font-semibold mb-4">Enter Geoapify API Key</h3>
-        <p className="text-sm text-gray-600 mb-4">
-          Get your free API key from{" "}
-          <a 
-            href="https://www.geoapify.com/" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:underline"
-          >
-            geoapify.com
-          </a>
-        </p>
-        <div className="flex gap-2 max-w-md mx-auto">
-          <Input
-            type="password"
-            placeholder="Enter your Geoapify API key"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleApiKeySubmit()}
-          />
-          <Button onClick={handleApiKeySubmit}>
-            Load Map
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="w-full">
       <div ref={mapRef} />
-      <div className="p-4 border-t">
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => setShowApiInput(true)}
-        >
-          Change API Key
-        </Button>
-      </div>
+      {showApiInput && (
+        <div className="p-4 border-t">
+          <div className="flex gap-2">
+            <Input
+              type="password"
+              placeholder="Enter your Geoapify API key"
+              onKeyPress={(e) => e.key === 'Enter' && setShowApiInput(false)}
+            />
+            <Button onClick={() => setShowApiInput(false)}>
+              Update Key
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
