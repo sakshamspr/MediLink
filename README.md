@@ -140,10 +140,6 @@ The built files will be in the `dist` directory and can be deployed to any stati
 - Safari (latest)
 - Edge (latest)
 
-## License
-
-This project is open source and available under the [MIT License](LICENSE).
-
 ## Acknowledgments
 
 - [Geoapify](https://www.geoapify.com/) for location and mapping services
