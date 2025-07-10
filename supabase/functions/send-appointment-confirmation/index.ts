@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
-const sendGridApiKey = "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";
+const sendGridApiKey = Deno.env.get("SENDGRID_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
