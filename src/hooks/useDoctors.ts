@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -96,11 +95,10 @@ export const useAvailableSlots = (doctorId: string) => {
     queryKey: ['available-slots', doctorId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('available_slots')
+        .from('current_available_slots')
         .select('*')
         .eq('doctor_id', doctorId)
         .eq('is_available', true)
-        .gte('slot_date', new Date().toISOString().split('T')[0])
         .order('slot_date')
         .order('slot_time');
       
