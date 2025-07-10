@@ -95,22 +95,6 @@ export const useAvailableSlots = (doctorId: string) => {
   return useQuery({
     queryKey: ['available-slots', doctorId],
     queryFn: async () => {
-      console.log('Fetching slots for doctor:', doctorId);
-      console.log('Current date filter:', new Date().toISOString().split('T')[0]);
-      
-      // First, let's check if there are ANY slots for this doctor
-      const { data: allSlots, error: allSlotsError } = await supabase
-        .from('available_slots')
-        .select('*')
-        .eq('doctor_id', doctorId);
-      
-      console.log('All slots for doctor (regardless of date/availability):', allSlots);
-      
-      if (allSlotsError) {
-        console.error('Error fetching all slots:', allSlotsError);
-      }
-      
-      // Now get the filtered slots
       const { data, error } = await supabase
         .from('available_slots')
         .select('*')
@@ -120,13 +104,7 @@ export const useAvailableSlots = (doctorId: string) => {
         .order('slot_date')
         .order('slot_time');
       
-      console.log('Filtered available slots:', data);
-      
-      if (error) {
-        console.error('Error fetching available slots:', error);
-        throw error;
-      }
-      
+      if (error) throw error;
       return data;
     }
   });
